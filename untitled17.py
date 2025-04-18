@@ -7,193 +7,147 @@ Original file is located at
     https://colab.research.google.com/drive/1BjmYI77-5NsAJnJnpYaX4t0ZGMpAmcXi
 """
 
-import pandas as pd
-df=pd.read_csv("/content/personal_transactions.csv")
-df
+def Model():
+  import pandas as pd
+  import numpy as np
+  import matplotlib.pyplot as plt
+  n=int(input("enter the no. of transaction:"))
+  Date=[]
+  Description=[]
+  Category=[]
+  Amount=[]
+  for i in range(n):
+    date=input("enter the date[mm/dd/yyyy]: ")
+    des=input("enter the description:")
+    cat=input("enter the category:")
+    amt=float(input("enter the amount:"))
+    Date.append(date)
+    Description.append(des)
+    Category.append(cat)
+    Amount.append(amt)
 
-n=int(input("enter the no. of transaction:"))
-Date=[]
-Description=[]
-Category=[]
-Amount=[]
-for i in range(n):
-  date=input("enter the date[mm/dd/yyyy]: ")
-  des=input("enter the description:")
-  cat=input("enter the category:")
-  amt=float(input("enter the amount:"))
-  Date.append(date)
-  Description.append(des)
-  Category.append(cat)
-  Amount.append(amt)
 
-
-df1={
-    "Date":Date,
-    "Description":Description,
-    "Category":Category,
-    "Amount":Amount
-}
-
-df1=pd.DataFrame(df1)
-df1
-
-df1=df.drop(["Transaction Type","Account Name"],axis=1)
-df1
-
-df1.info()
-
-df1['Description'].unique()
-
-df1['Category'].unique()
-df1
-
-import pandas as pd
-
-# Assuming df1 is your DataFrame
-# Convert 'Date' column to datetime objects
-df1['Date'] = pd.to_datetime(df1['Date'])
-
-df1
-
-df2={}
-
-df2=df.groupby(['Category'])['Amount'].sum()
-
-df2
-
-merge_map = {
+  df1={
+      "Date":Date,
+      "Description":Description,
+      "Category":Category,
+      "Amount":Amount
+  }
+  df1=pd.DataFrame(df1)
+  df1['Date'] = pd.to_datetime(df1['Date'])
+  df2=df1.groupby(['Category'])['Amount'].sum()
+  merge_map = {
     'Food & Dining': ['Alcohol & Bars','Coffee Shops', 'Fast Food', 'Food & Dining', 'Restaurants','Groceries','Haircut'],
     'Utilities': ['Mortgage & Rent', 'Utilities', 'Home Improvement'],
     'Transportation': ['Gas & Fuel', 'Auto Insurance'],
     'Entertainment': ['Music', 'Movies & DVDs', 'Television', 'Entertainment','Internet', 'Mobile Phone'],
     'Debt Payment': ['Credit Card Payment'],
     'Others': ['Shopping','Electronics & Software']
-}
+  }
+  grouped_data = []
+  grouped_categories = set()
 
-import pandas as pd
-grouped_data = []
-
-# Mark categories that are grouped
-grouped_categories = set()
-
-for new_cat, old_cats in merge_map.items():
-    # Use .index to access the 'Category' (which is now the index)
+  for new_cat, old_cats in merge_map.items():
     amount_sum = df2[df2.index.isin(old_cats)].sum()
     grouped_data.append((new_cat, amount_sum))
     grouped_categories.update(old_cats)
+  ungrouped = df2[~df2.index.isin(grouped_categories)]
+  for i, row in ungrouped.items():
+    grouped_data.append((i, row))
+  merged_df = pd.DataFrame(grouped_data, columns=['Category', 'Amount'])
+  merged_df = merged_df.sort_values(by='Amount', ascending=False)
 
-# Add ungrouped categories
-# Use .index to access the 'Category' (which is now the index)
-ungrouped = df2[~df2.index.isin(grouped_categories)]
-for i, row in ungrouped.items(): # Use .items() for Series
-    grouped_data.append((i, row))  # i represents the category
+  categories = merged_df['Category']
+  amounts = merged_df['Amount']
 
-# Final merged DataFrame
-merged_df = pd.DataFrame(grouped_data, columns=['Category', 'Amount'])
-
-# Sort by Amount if needed
-merged_df = merged_df.sort_values(by='Amount', ascending=False)
-
-print(merged_df)
-
-merged_df
-
-import matplotlib.pyplot as plt
-
-
-categories = merged_df['Category']
-amounts = merged_df['Amount']
-
-plt.figure(figsize=(6, 6))
-plt.pie(
+  plt.figure(figsize=(6, 6))
+  plt.pie(
     amounts,
     labels=categories,
     autopct='%1.1f%%',
     startangle=140,
     wedgeprops={'edgecolor': 'white'}
-)
+  )
 
-plt.title("Spending Breakdown by Category")
-plt.axis('equal')
-plt.show()
+  plt.title("Spending Breakdown by Category")
+  plt.axis('equal')
+  plt.show()
+  max_row_index = merged_df['Amount'].idxmax()
+  max_category = merged_df.loc[max_row_index, 'Category']
+  max_amount = merged_df['Amount'].max()
+  if max_category == 'Paycheck':
+    print("your expense on paycheck is highest by ",max_amount,""".So try to control it by doing following things
+       1. Check if Payroll Is Sustainable
+      If payroll (salaries) takes up a large chunk of your total expenses or income:
 
-max_row_index = merged_df['Amount'].idxmax()
-max_category = merged_df.loc[max_row_index, 'Category']
-max_amount = merged_df['Amount'].max()
+      Review: Is your team scaled correctly?
 
-if max_category == 'Paycheck':
-  print("your expense on paycheck is highest by ",max_amount,""".So try to control it by doing following things
-  1. Check if Payroll Is Sustainable
-If payroll (salaries) takes up a large chunk of your total expenses or income:
+      Use this rough rule: Payroll should usually be 30–50% of business revenue depending on the industry.
 
-Review: Is your team scaled correctly?
+      If it’s too high: consider outsourcing, automating, or optimizing team structure.
 
-Use this rough rule: Payroll should usually be 30–50% of business revenue depending on the industry.
+      2. Track ROI on Team Members
+      Not every expense = investment. Ask:
 
-If it’s too high: consider outsourcing, automating, or optimizing team structure.
+      Is each role directly or indirectly adding value?
 
-2. Track ROI on Team Members
-Not every expense = investment. Ask:
+      For sales roles: Are they bringing in more than they cost?
 
-Is each role directly or indirectly adding value?
+      For support/admin: Are they saving you time or increasing efficiency?
 
-For sales roles: Are they bringing in more than they cost?
+      3. Avoid Over-Hiring Early
+    Especially for startups or small businesses:
 
-For support/admin: Are they saving you time or increasing efficiency?
+      Don’t overstaff just to “look big.”
 
-3. Avoid Over-Hiring Early
-Especially for startups or small businesses:
+      Start lean, then scale up as needed.
 
-Don’t overstaff just to “look big.”
+      Consider freelancers or contractors for flexible costs.
 
-Start lean, then scale up as needed.
+      4. Use Payroll Software or Services
+      Paying high salaries means you’re managing a team. Use tools to:
 
-Consider freelancers or contractors for flexible costs.
+    Automate payslips, tax calculations, PF/ESI/TDS compliance (India-specific)
 
-4. Use Payroll Software or Services
-Paying high salaries means you’re managing a team. Use tools to:
+      Track hours, bonuses, and leave
 
-Automate payslips, tax calculations, PF/ESI/TDS compliance (India-specific)
+    Examples: Zoho Payroll, QuickBooks, Gusto, Keka
 
-Track hours, bonuses, and leave
+      5. Budget for Benefits and Bonuses
+      Beyond salary, remember to account for:
 
-Examples: Zoho Payroll, QuickBooks, Gusto, Keka
+      Annual bonuses
 
-5. Budget for Benefits and Bonuses
-Beyond salary, remember to account for:
+      Insurance and perks
 
-Annual bonuses
+      Appraisals or raises
 
-Insurance and perks
+    Budgeting for this ahead keeps you from running short at year-end.
 
-Appraisals or raises
+      6. Plan for Taxes (Both Sides)
+      If you're the employer:
 
-Budgeting for this ahead keeps you from running short at year-end.
+      Factor in employer’s share of taxes/benefits.
 
-6. Plan for Taxes (Both Sides)
-If you're the employer:
+      Offer tax-efficient salary structures to employees (meal cards, health benefits, allowances).
 
-Factor in employer’s share of taxes/benefits.
+      Ensure compliance with labor laws, PF, ESI, TDS.
 
-Offer tax-efficient salary structures to employees (meal cards, health benefits, allowances).
+    7. Build an Emergency Buffer
+      Imagine a slow month or bad quarter — can you still pay salaries?
 
-Ensure compliance with labor laws, PF, ESI, TDS.
+      Keep 3–6 months of payroll expenses in a separate emergency fund.
 
-7. Build an Emergency Buffer
-Imagine a slow month or bad quarter — can you still pay salaries?
+      It protects your team and your reputation during tough times.
 
-Keep 3–6 months of payroll expenses in a separate emergency fund.
+      8. Invest in Team Growth — Wisely
+    Paying well is great. But also:
 
-It protects your team and your reputation during tough times.
+    Invest in training, performance tools, wellbeing.
 
-8. Invest in Team Growth — Wisely
-Paying well is great. But also:
-
-Invest in training, performance tools, wellbeing.
-
-Encourage output-driven culture: pay more where it matters, not just to keep people. """)
-elif max_category == 'Utilities':
-  print("your expense on Utilities is highest by ",max_row_index,""". So try to control it by doing following things
+      Encourage output-driven culture: pay more where it matters, not just to keep people. """)
+  elif max_category == 'Utilities':
+    print("your expense on Utilities is highest by ",max_row_index,""". So try to control it by doing following things
   ⚡ 1. Audit Your Bills
 Go through the last 3–6 months of bills.
 
@@ -248,8 +202,8 @@ Clean AC filters monthly — it reduces power draw significantly.
 
 💼 Bonus: Claim Tax Rebates (if business use)
 If the utilities are partly for a home office or business, you may be able to claim deductions or write-offs on your tax return.""")
-elif max_category == 'Transportation':
-  print("your expense on Transportation is highest by ",max_row_index,""". So try to control it by doing following things
+  elif max_category == 'Transportation':
+    print("your expense on Transportation is highest by ",max_row_index,""". So try to control it by doing following things
   🔍 1. Track What’s Driving the Cost
 Break it down:
 
@@ -334,8 +288,8 @@ Bonus: Tax Deductions (for business use)
 If you’re self-employed or using your vehicle for work, part of your fuel and maintenance can be tax deductible (check with a tax advisor).
 
 """)
-elif max_category == "Entertainment":
-  print("your expense on Entertainment is highest by ",max_row_index,""". So try to control it by doing following things
+  elif max_category == "Entertainment":
+    print("your expense on Entertainment is highest by ",max_row_index,""". So try to control it by doing following things
   📊 1. Audit All Entertainment Spending
 Go through your bank and wallet:
 
@@ -400,8 +354,8 @@ Try hobbies that are both fun and skill-building: music, painting, creative writ
 Some hobbies can even earn money later.
 
 """)
-elif max_category == "Debt Payment":
-  print("your expense on Debt payment is highest by ",max_row_index,""". So try to control it by doing following things
+  elif max_category == "Debt Payment":
+   print("your expense on Debt payment is highest by ",max_row_index,""". So try to control it by doing following things
 
 📊 1. Know Your Total Debt Load
 Make a quick list:
@@ -481,8 +435,8 @@ It sounds backwards, but building a small emergency fund (₹5,000–₹10,000) 
 
 📈 Bonus: Track Progress — Celebrate Wins
 Use a tracker to watch your balance drop. Every ₹1,000 closer to freedom is a win. It makes the process less depressing and more empowering.""")
-elif max_category == "Others":
-  print("your expense on other expenses is highest by ",max_row_index,""". So try to control it by doing following things
+  elif max_category == "Others":
+   print("your expense on other expenses is highest by ",max_row_index,""". So try to control it by doing following things
   🧾 1. Define What "Other" Actually Means
 This is usually a catch-all bucket that includes:
 
@@ -579,8 +533,8 @@ A surprise event
 Emergency home fix
 
 Just don’t let it be a habit — plan for it.""")
-elif max_category == "Food & Dining":
-  print("your expense on Food &Dinng expenses is highest by ",max_row_index,""". So try to control it by doing following things
+  elif max_category == "Food & Dining":
+    print("your expense on Food &Dinng expenses is highest by ",max_row_index,""". So try to control it by doing following things
   📊 1. Split Food Into 2 Buckets
 Break it down:
 
@@ -662,4 +616,4 @@ DIY burgers/pasta
 Make popcorn + movie night at home = same fun, less ₹₹₹""")
 
 
-print("\tTHANK YOU FOR VISITING US\t")
+  print("\tTHANK YOU FOR VISITING US\t")
