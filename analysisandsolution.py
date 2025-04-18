@@ -95,6 +95,10 @@ def Model():
   plt.xticks(rotation=45)
   plt.show()
 
+  #bars(Amount vs Month)
+  plt.figure(figsize=(10,10))
+  plt.bar(df1.Month,df1.Amount)
+  plt.show()
   #showing where the expenditure is focused on and giving their solution
   max_row_index = merged_df['Amount'].idxmax()
   max_category = merged_df.loc[max_row_index, 'Category']
